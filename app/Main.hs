@@ -86,10 +86,10 @@ processRequest = do
         Just newBoard -> ($ newBoard) $
             if wins move newBoard then
                 response "{} wins!" move
-            else if hasEmpty newBoard then
-                movingResponse (nextMove move)
-            else
+            else if isFull newBoard then
                 response "You played a draw." X
+            else
+                movingResponse (nextMove move)
 
 
 main :: IO ()

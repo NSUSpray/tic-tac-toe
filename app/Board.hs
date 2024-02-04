@@ -30,17 +30,17 @@ moveTo m (i,j) b = case safeGet i j b of
     Just (Just _) -> Nothing  -- cell isn't empty
     _ -> putOn (Just m) (i,j) b
 
-hasEmpty :: Board -> Bool
-hasEmpty = elem Nothing
+isFull :: Board -> Bool
+isFull = notElem Nothing
 
 wins :: Move -> Board -> Bool
-wins m b = any (any isFull) [cols,rows_,diags]
+wins m b = any (any isFullSeries) [cols,rows_,diags]
     where
         cols = map (`getCol` b) [1 .. ncols b]
         rows_ = map (`getRow` b) [1 .. nrows b]
         diags = [getDiag b, getAntiDiag b]
         getAntiDiag = getDiag . fromLists . reverse . toLists
-        isFull = all (== Just m)
+        isFullSeries = all (== Just m)
 
 anyWins :: Board -> Bool
 anyWins b = wins X b || wins O b

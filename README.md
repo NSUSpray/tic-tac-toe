@@ -24,7 +24,7 @@ $ cd tic-tac-toe
 $ cabal run
 ```
 
-and wait the message
+and wait for the message
 
 ```
 Setting phasers to stun... (port 3000) (ctrl-c to quit)
