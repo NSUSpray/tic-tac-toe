@@ -2,7 +2,8 @@
 
 module Main where
 
-import Control.Monad (forM_,when)
+import Control.Monad (forM_)
+import Text.Read (readMaybe)
 
 import Data.Matrix (fromLists,toLists)
 import Text.Blaze.Html5 as H
@@ -62,18 +63,17 @@ readFormParams = do
     tBoard <- S.formParam "board"
     tMove <- S.formParam "move"
     tPos <- S.formParam "pos"
-    let rBoard = reads tBoard :: [([[Cell]],String)]
-    let rMove = reads tMove :: [(Move,String)]
-    let rPos = reads tPos :: [(Pos,String)]
-    when (null rBoard || null rMove || null rPos) $ do
-        response
-            "Something went wrong. You’ll have to start over :(" X emptyBoard
-        S.finish
-    return (
-        fromLists $ fst $ Prelude.head rBoard,
-        fst $ Prelude.head rMove,
-        fst $ Prelude.head rPos
-        )
+    case do
+        board <- readMaybe tBoard
+        move <- readMaybe tMove
+        pos <- readMaybe tPos
+        return (fromLists board, move, pos)
+        of
+        Nothing -> do
+            response "Something went wrong. You’ll have to start over :("
+                X emptyBoard
+            S.finish
+        Just res -> return res
 
 processRequest :: S.ActionM ()
 processRequest = do
