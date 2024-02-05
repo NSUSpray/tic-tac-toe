@@ -25,22 +25,22 @@ putOn :: Cell -> Pos -> Board -> Maybe Board
 putOn = safeSet
 
 movedTo :: Move -> Pos -> Board -> Maybe Board
-movedTo m (i,j) b = case safeGet i j b of
+movedTo player (i,j) board = case safeGet i j board of
     Nothing -> Nothing  -- invalid index
     Just (Just _) -> Nothing  -- cell isn't empty
-    _ -> Just m `putOn` (i,j) $ b
+    _ -> Just player `putOn` (i,j) $ board
 
 isFull :: Board -> Bool
 isFull = notElem Nothing
 
 winsOn :: Move -> Board -> Bool
-m `winsOn` b = any (any isFullSeries) [cols,rows_,diags]
+player `winsOn` board = any (any isFullSeries) [cols,rows_,diags]
     where
-        cols = map (`getCol` b) [1 .. ncols b]
-        rows_ = map (`getRow` b) [1 .. nrows b]
-        diags = [getDiag b, getAntiDiag b]
+        cols = map (`getCol` board) [1 .. ncols board]
+        rows_ = map (`getRow` board) [1 .. nrows board]
+        diags = [getDiag board, getAntiDiag board]
         getAntiDiag = getDiag . fromLists . reverse . toLists
-        isFullSeries = all (== Just m)
+        isFullSeries = all (== Just player)
 
 anyWinsOn :: Board -> Bool
-anyWinsOn b = X `winsOn` b || O `winsOn` b
+anyWinsOn board = X `winsOn` board || O `winsOn` board
