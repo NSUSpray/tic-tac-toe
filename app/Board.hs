@@ -8,8 +8,8 @@ type Board = Matrix Cell
 type Pos = (Int,Int)
 
 
-rows :: Board -> [[(Pos,Cell)]]
-rows = toLists . mapPos (,)
+rowsOf :: Board -> [[(Pos,Cell)]]
+rowsOf = toLists . mapPos (,)
 
 emptyBoardOfSize :: Int -> Board
 emptyBoardOfSize n = matrix n n $ const Nothing
@@ -17,24 +17,24 @@ emptyBoardOfSize n = matrix n n $ const Nothing
 emptyBoard :: Board
 emptyBoard = emptyBoardOfSize 3
 
-nextMove :: Move -> Move
-nextMove X = O
-nextMove O = X
+moveAfter :: Move -> Move
+moveAfter X = O
+moveAfter O = X
 
 putOn :: Cell -> Pos -> Board -> Maybe Board
 putOn = safeSet
 
-moveTo :: Move -> Pos -> Board -> Maybe Board
-moveTo m (i,j) b = case safeGet i j b of
+movedTo :: Move -> Pos -> Board -> Maybe Board
+movedTo m (i,j) b = case safeGet i j b of
     Nothing -> Nothing  -- invalid index
     Just (Just _) -> Nothing  -- cell isn't empty
-    _ -> putOn (Just m) (i,j) b
+    _ -> Just m `putOn` (i,j) $ b
 
 isFull :: Board -> Bool
 isFull = notElem Nothing
 
-wins :: Move -> Board -> Bool
-wins m b = any (any isFullSeries) [cols,rows_,diags]
+winsOn :: Move -> Board -> Bool
+m `winsOn` b = any (any isFullSeries) [cols,rows_,diags]
     where
         cols = map (`getCol` b) [1 .. ncols b]
         rows_ = map (`getRow` b) [1 .. nrows b]
@@ -42,5 +42,5 @@ wins m b = any (any isFullSeries) [cols,rows_,diags]
         getAntiDiag = getDiag . fromLists . reverse . toLists
         isFullSeries = all (== Just m)
 
-anyWins :: Board -> Bool
-anyWins b = wins X b || wins O b
+anyWinsOn :: Board -> Bool
+anyWinsOn b = X `winsOn` b || O `winsOn` b

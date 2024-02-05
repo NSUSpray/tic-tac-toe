@@ -7,7 +7,7 @@ import Text.Read (readMaybe)
 
 import Data.Matrix (fromLists,toLists)
 import Text.Blaze.Html5 as H
-import Text.Blaze.Html5.Attributes hiding (form,title,rows)
+import Text.Blaze.Html5.Attributes hiding (form,title)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import qualified Web.Scotty as S
 import Network.Wai.Middleware.Static
@@ -28,15 +28,15 @@ cellToHtml _ True _ = text " "
 
 boardToHtml :: Move -> Board -> Html
 boardToHtml move board = form ! method "post" $ do
-    store "move" move
-    store "board" $ toLists board
-    table $ tbody $ forM_ (rows board) $ tr . mapM_ tdFromCell
+    move `storeAs` "move"
+    toLists board `storeAs` "board"
+    table $ tbody $ forM_ (rowsOf board) $ tr . mapM_ tdFromCell
     where
-        store tName tValue = input
+        tValue `storeAs` tName = input
             ! type_ "hidden"
             ! name tName
             ! value (toValue $ show tValue)
-        tdFromCell = td . cellToHtml move (anyWins board)
+        tdFromCell = td . cellToHtml move (anyWinsOn board)
 
 
 response :: String -> Move -> Board -> S.ActionM ()
@@ -77,23 +77,24 @@ readFormParams = do
 
 processRequest :: S.ActionM ()
 processRequest = do
-    (oldBoard,move,pos) <- readFormParams
-    case moveTo move pos oldBoard of
-        Nothing -> ($ oldBoard) $
+    (currentBoard,currentPlayer,newPos) <- readFormParams
+    case currentPlayer `movedTo` newPos $ currentBoard of
+        Nothing -> ($ currentBoard) $
             response
                 "This cell is already occupied. {}, please choose another:"
-                move
+                currentPlayer
         Just newBoard -> ($ newBoard) $
-            if wins move newBoard then
-                response "{} wins!" move
-            else if isFull newBoard then
+            if currentPlayer `winsOn` newBoard then
+                response "{} wins!" currentPlayer
+            else if ($ newBoard) isFull then
                 response "You played a draw." X
             else
-                movingResponse (nextMove move)
+                movingResponse (moveAfter currentPlayer)
 
 
 main :: IO ()
-main = S.scotty 3000 $ do
+main = S.scotty port $ do
     S.middleware $ staticPolicy (noDots >-> addBase "static")
     S.get "/" $ movingResponse X emptyBoard
     S.post "/" processRequest
+    where port = 3000

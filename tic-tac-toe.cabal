@@ -23,7 +23,7 @@ name:               tic-tac-toe
 version:            0.1.0.0
 
 -- A short (one-line) description of the package.
-synopsis:           Simple web browser Tic-tac-toe game based on Scotty library.
+synopsis:           Simple browser-based Tic-tac-toe game using the Scotty library.
 
 -- A longer description of the package.
 -- description:
