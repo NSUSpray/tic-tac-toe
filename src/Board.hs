@@ -1,6 +1,7 @@
-module Board where
+module Board (module Board, getElem, toLists, fromLists) where
 
 import Data.Matrix
+
 
 data Move = X | O deriving (Eq,Show,Read)
 type Cell = Maybe Move
@@ -28,16 +29,16 @@ movedTo :: Move -> Pos -> Board -> Maybe Board
 movedTo player (i,j) board = case safeGet i j board of
     Nothing -> Nothing  -- invalid index
     Just (Just _) -> Nothing  -- cell isn't empty
-    _ -> Just player `putOn` (i,j) $ board
+    Just Nothing -> Just player `putOn` (i,j) $ board
 
 isFull :: Board -> Bool
 isFull = notElem Nothing
 
 winsOn :: Move -> Board -> Bool
-player `winsOn` board = any (any isFullSeries) [cols,rows_,diags]
+player `winsOn` board = any (any isFullSeries) [cols,rows,diags]
     where
         cols = map (`getCol` board) [1 .. ncols board]
-        rows_ = map (`getRow` board) [1 .. nrows board]
+        rows = map (`getRow` board) [1 .. nrows board]
         diags = [getDiag board, getAntiDiag board]
         getAntiDiag = getDiag . fromLists . reverse . toLists
         isFullSeries = all (== Just player)

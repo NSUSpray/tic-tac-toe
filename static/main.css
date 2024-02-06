@@ -25,8 +25,8 @@ table button {
   height: 100%;
   border: none;
   padding: 0;
-  color: transparent;
   font-size: 1em;
+  color: transparent;
   background-color: transparent;
 }
 table button:hover {

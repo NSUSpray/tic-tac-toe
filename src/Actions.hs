@@ -4,7 +4,6 @@ module Actions (movingResponse,processRequest) where
 
 import Text.Read (readMaybe)
 
-import Data.Matrix (fromLists)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes hiding (form,title)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
@@ -35,14 +34,14 @@ movingResponse = response "Move of {}:"
 
 readFormParams :: S.ActionM (Board,Move,Pos)
 readFormParams = do
-    tBoard <- S.formParam "board"
-    tMove <- S.formParam "move"
-    tPos <- S.formParam "pos"
+    sCells <- S.formParam "board"
+    sMove <- S.formParam "move"
+    sPos <- S.formParam "pos"
     case do
-        board <- readMaybe tBoard
-        move <- readMaybe tMove
-        pos <- readMaybe tPos
-        return (fromLists board, move, pos)
+        cells <- readMaybe sCells
+        move <- readMaybe sMove
+        pos <- readMaybe sPos
+        return (fromLists cells, move, pos)
         of
         Nothing -> do
             response "Something went wrong. You’ll have to start over :("

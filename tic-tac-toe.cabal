@@ -59,8 +59,8 @@ common warnings
 
 library
     exposed-modules:
-        App,
         Actions,
+        App,
         Board,
         BoardToHtml
     hs-source-dirs:
