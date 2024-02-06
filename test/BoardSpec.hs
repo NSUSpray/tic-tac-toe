@@ -1,9 +1,9 @@
 module BoardSpec where
 
 import Text.Read (readMaybe)
+import Data.Maybe (isJust,fromJust)
 
 import Test.Hspec
-import Data.Maybe (isJust,fromJust)
 
 import Board
 
