@@ -25,6 +25,7 @@ buttonSubstring :: String
 buttonSubstring = "<button name=\\\"pos\\\" value=\\\"("
 
 
+spec :: Spec
 spec = describe "boardToHtml" $ do
     let showBoard = show . renderHtml . boardToHtml X
     it "contains form with table inside" $ do

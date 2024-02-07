@@ -17,6 +17,7 @@ sampleBoard = fromLists [
 fullBoard = fromLists $ replicate 3 $ replicate 3 $ Just X
 
 
+spec :: Spec
 spec = do
 
     describe "Move" $ do

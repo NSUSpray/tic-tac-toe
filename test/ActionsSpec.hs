@@ -67,18 +67,20 @@ match s p _ = ResponseMatcher 200 [] $ MatchBody $ \_ body ->
             "Response body\n" ++ show body ++ "\ndoes nоt satisfy\n" ++ show s
 
 respond'sBody :: a
-respond'sBody = undefined
+respond'sBody = error
+    "It's a dummy for the last argument of 'match' function, not for evaluate."
 
 
+spec :: Spec
 spec = with app $ do
 
     describe "GET" $
 
         it "responds with empty board and move of 'X'" $ do
-            get "/" `shouldRespondWith`
-                match rEmptyBoard isInfixOf respond'sBody
-            get "/" `shouldRespondWith`
-                match "<h1>Move of \\226\\128\\152X\\226\\128\\153:</h1>"
+            get "/" `shouldRespondWith` match
+                rEmptyBoard isInfixOf respond'sBody
+            get "/" `shouldRespondWith` match
+                "<h1>Move of \\226\\128\\152X\\226\\128\\153:</h1>"
                     isInfixOf respond'sBody
 
     describe "POST" $ do
@@ -89,10 +91,10 @@ spec = with app $ do
                     params =
                         [("move","X"), ("board", vEmptyBoard), ("pos","(3,1)")]
                     postMove = postHtmlForm "/" params
-                postMove `shouldRespondWith`
-                    match rNonEmptyBoard isInfixOf respond'sBody
-                postMove `shouldRespondWith`
-                    match "<h1>Move of \\226\\128\\152O\\226\\128\\153:</h1>"
+                postMove `shouldRespondWith` match
+                    rNonEmptyBoard isInfixOf respond'sBody
+                postMove `shouldRespondWith` match
+                    "<h1>Move of \\226\\128\\152O\\226\\128\\153:</h1>"
                         isInfixOf respond'sBody
 
         context "when 'O' moves to non-empty cell" $
@@ -101,8 +103,8 @@ spec = with app $ do
                     params =
                         [("move","O"), ("board", vXBoard), ("pos","(3,1)")]
                     postMove = postHtmlForm "/" params
-                postMove `shouldRespondWith`
-                    match rNonEmptyBoard isInfixOf respond'sBody
+                postMove `shouldRespondWith` match
+                    rNonEmptyBoard isInfixOf respond'sBody
                 postMove `shouldRespondWith` match
                     "<h1>This cell is already occupied. \\226\\128\\152O\\226\
                         \\\128\\153, please choose another:</h1>"
