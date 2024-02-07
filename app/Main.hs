@@ -1,7 +1,7 @@
 module Main where
 
-import App (runApp)
+import App (run)
 
 
 main :: IO ()
-main = runApp
+main = run

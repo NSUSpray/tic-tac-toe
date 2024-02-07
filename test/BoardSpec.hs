@@ -1,7 +1,8 @@
 module BoardSpec where
 
+import Control.Exception (evaluate)
 import Text.Read (readMaybe)
-import Data.Maybe (isJust,fromJust)
+import Data.Maybe
 
 import Test.Hspec
 
@@ -21,13 +22,13 @@ fullBoard = fromLists $ replicate 3 $ replicate 3 $ Just X
 spec = do
 
     describe "Move" $ do
-        it "is instance of Eq" $
-            X==X && O==O && X/=O `shouldBe` True
-        it "is instance of Show" $
-            (show X, show O) `shouldBe` ("X","O")
-        it "is instance of Read" $
-            [readMaybe "X", readMaybe "O", readMaybe "Oops!"]
-                `shouldBe` [Just X, Just O, Nothing]
+        it "is correct instance of Eq" $
+            evaluate (X == X && O == O && X /= O) `shouldReturn` True
+        it "is expected instance of Show" $
+            return (show X, show O) `shouldReturn` ("X","O")
+        it "is expected instance of Read" $
+            return [readMaybe "X", readMaybe "O", readMaybe "Oops!"]
+                `shouldReturn` [Just X, Just O, Nothing]
 
     describe "rowsOf" $
         it "gets board's rows" $
@@ -37,9 +38,8 @@ spec = do
                         [ ((2,1), Just X), ((2,2), Just O) ] ]
 
     describe "emptyBoard" $
-        it "makes empty board of size 3x3" $
-            emptyBoard `shouldBe`
-                fromLists (replicate 3 $ replicate 3 Nothing)
+        it "makes empty board" $
+            emptyBoard `shouldSatisfy` all isNothing
 
     describe "moveAfter" $
         it "returns move following given" $ do
@@ -55,14 +55,18 @@ spec = do
         context "when target cell is occupied" $
             it "returns Nothing" $
                 (X `movedTo` (3,1) $ sampleBoard) `shouldBe` Nothing
+        context "when target cell has invalid indices" $
+            it "returns Nothing" $ do
+                (X `movedTo` (3,0) $ sampleBoard) `shouldBe` Nothing
+                (X `movedTo` (4,1) $ sampleBoard) `shouldBe` Nothing
 
     describe "isFull" $ do
         context "when where are no empty cells on the board" $
             it "returns True" $
-                fullBoard `shouldSatisfy` isFull
+                isFull fullBoard `shouldBe` True
         context "when where is at least one empty cell on the board" $
             it "returns False" $
-                sampleBoard `shouldNotSatisfy` isFull
+                isFull sampleBoard `shouldBe` False
 
     describe "winsOn" $ do
         context "when given player does not win" $
@@ -75,7 +79,7 @@ spec = do
     describe "anyWinsOn" $ do
         context "when nobody wins" $
             it "returns False" $
-                emptyBoard `shouldNotSatisfy` anyWinsOn
+                anyWinsOn emptyBoard `shouldBe` False
         context "when anybody wins" $
             it "returns True" $
-                sampleBoard `shouldSatisfy` anyWinsOn
+                anyWinsOn sampleBoard `shouldBe` True

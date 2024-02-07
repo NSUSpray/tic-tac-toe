@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module App (app,runApp) where
+module App (app,run) where
 
 import qualified Web.Scotty as S
 import Network.Wai (Application)
@@ -19,6 +19,6 @@ routes = do
 app :: IO Application
 app = S.scottyApp routes
 
-runApp :: IO ()
-runApp = S.scotty port routes
+run :: IO ()
+run = S.scotty port routes
     where port = 3000
