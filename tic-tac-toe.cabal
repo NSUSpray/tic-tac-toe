@@ -103,6 +103,7 @@ test-suite tic-tac-toe-test
     type: exitcode-stdio-1.0
     main-is:          Spec.hs
     other-modules:
+        ActionsSpec,
         BoardSpec,
         BoardToHtmlSpec
     build-depends:

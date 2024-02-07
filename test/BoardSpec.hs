@@ -10,12 +10,10 @@ import Board
 
 
 sampleBoard, fullBoard :: Board
-
 sampleBoard = fromLists [
     [Just X, Just O, Nothing],
     [Just X, Just X, Nothing],
     [Just O, Nothing, Just X] ]
-
 fullBoard = fromLists $ replicate 3 $ replicate 3 $ Just X
 
 
