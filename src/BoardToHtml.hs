@@ -21,12 +21,10 @@ cellToHtml possibleMove anyWins (pos,cell) = case (anyWins,cell) of
 
 boardToHtml :: Move -> Board -> Html
 boardToHtml move board = form ! method "post" $ do
-    move `storeAs` "move"
-    toLists board `storeAs` "board"
+    input
+        ! type_ "hidden"
+        ! name "board"
+        ! value (toValue $ show $ toLists board)
     table $ tbody $ forM_ (rowsOf board) $ tr . mapM_ tdFromCell
     where
-        tValue `storeAs` vName = input
-            ! type_ "hidden"
-            ! name vName
-            ! value (toValue $ show tValue)
         tdFromCell = td . cellToHtml move (anyWinsOn board)

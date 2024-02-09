@@ -40,10 +40,13 @@ spec = do
         it "makes empty board" $
             emptyBoard `shouldSatisfy` all isNothing
 
-    describe "moveAfter" $
-        it "returns move following given" $ do
-            moveAfter X `shouldBe` O
-            moveAfter O `shouldBe` X
+    describe "nextMoveOn" $ do
+        context "when last move was X" $
+            it "returns O" $
+                nextMoveOn sampleBoard `shouldBe` O
+        context "when last move was O" $
+            it "returns X" $
+                nextMoveOn emptyBoard `shouldBe` X
 
     describe "movedTo" $ do
         context "when target cell is empty" $

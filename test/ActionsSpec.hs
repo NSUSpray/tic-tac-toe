@@ -50,13 +50,13 @@ vXBoard = show [
     ]
 vXXBoard = show [
     [Nothing,Nothing,Nothing],
-    [Nothing, Just X, Nothing],
-    [Just X, Nothing, Nothing]
+    [Just O, Just X, Nothing],
+    [Just X, Just O, Nothing]
     ]
 vPreFullBoard = show [
     [Just X, Just O, Just X],
-    [Just X, Just O, Just O],
-    [Nothing, Just X, Just X]
+    [Just O, Just O, Just X],
+    [Nothing, Just X, Just O]
     ]
 
 
@@ -88,8 +88,7 @@ spec = with app $ do
         context "when 'X' moves to empty cell" $
             it "responds with updated board and move of 'O'" $ do
                 let
-                    params =
-                        [("move","X"), ("board", vEmptyBoard), ("pos","(3,1)")]
+                    params = [("board", vEmptyBoard), ("pos","(3,1)")]
                     postMove = postHtmlForm "/" params
                 postMove `shouldRespondWith` match
                     rNonEmptyBoard isInfixOf respond'sBody
@@ -100,8 +99,7 @@ spec = with app $ do
         context "when 'O' moves to non-empty cell" $
             it "revokes move and proposes 'O' to choose another cell" $ do
                 let
-                    params =
-                        [("move","O"), ("board", vXBoard), ("pos","(3,1)")]
+                    params = [("board", vXBoard), ("pos","(3,1)")]
                     postMove = postHtmlForm "/" params
                 postMove `shouldRespondWith` match
                     rNonEmptyBoard isInfixOf respond'sBody
@@ -113,8 +111,7 @@ spec = with app $ do
         context "when 'X' moves and wins" $
             it "congratulates 'X' and finishes the game" $ do
                 let
-                    params =
-                        [("move","X"), ("board", vXXBoard), ("pos","(1,3)")]
+                    params = [("board", vXXBoard), ("pos","(1,3)")]
                     postMove = postHtmlForm "/" params
                 postMove `shouldRespondWith` match
                     "<h1>\\226\\128\\152X\\226\\128\\153 wins!</h1>"
@@ -123,11 +120,10 @@ spec = with app $ do
                     "<button name=\\\"pos\\\" value=\\\"("
                         (\a b -> not $ a `isInfixOf` b) respond'sBody
 
-        context "when 'O' tooks last cell and nobody wins" $
+        context "when 'X' tooks last cell and nobody wins" $
             it "reports a draw and finishes the game" $ do
                 let
-                    params =
-                        [("move","O"), ("board", vPreFullBoard), ("pos","(3,1)")]
+                    params = [("board", vPreFullBoard), ("pos","(3,1)")]
                     postMove = postHtmlForm "/" params
                 postMove `shouldRespondWith` match
                     "<h1>You played a draw.</h1>" isInfixOf respond'sBody
@@ -138,9 +134,8 @@ spec = with app $ do
         context "when any form param is invalid" $
             it "reports a problem and restarts the game" $ do
                 let
-                    ps1 = [("move","Oops!"), ("board", vEmptyBoard), ("pos","(3,1)")]
-                    ps2 = [("move","X"), ("board", tail vEmptyBoard), ("pos","(3,1)")]
-                    ps3 = [("move","X"), ("board", vEmptyBoard), ("pos","{3;1}")]
+                    params1 = [("board", tail vEmptyBoard), ("pos","(3,1)")]
+                    params2 = [("board", vEmptyBoard), ("pos","{3;1}")]
                     h1 = "<h1>Something went wrong. You\\226\\128\\153ll have\
                         \ to start over :(</h1>"
                 mapM_ (\params -> do
@@ -149,4 +144,4 @@ spec = with app $ do
                         h1 isInfixOf respond'sBody
                     postMove `shouldRespondWith` match
                         rEmptyBoard isInfixOf respond'sBody
-                    ) [ps1,ps2,ps3]
+                    ) [params1,params2]

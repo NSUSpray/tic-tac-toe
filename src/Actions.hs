@@ -32,16 +32,14 @@ movingResponse :: Move -> Board -> S.ActionM ()
 movingResponse = response "Move of {}:"
 
 
-readFormParams :: S.ActionM (Board,Move,Pos)
+readFormParams :: S.ActionM (Board,Pos)
 readFormParams = do
     sCells <- S.formParam "board"
-    sMove <- S.formParam "move"
     sPos <- S.formParam "pos"
     case do
         cells <- readMaybe sCells
-        move <- readMaybe sMove
         pos <- readMaybe sPos
-        return (fromLists cells, move, pos)
+        return (fromLists cells, pos)
         of
         Nothing -> do
             response "Something went wrong. You’ll have to start over :("
@@ -51,7 +49,8 @@ readFormParams = do
 
 processRequest :: S.ActionM ()
 processRequest = do
-    (currentBoard,currentPlayer,newPos) <- readFormParams
+    (currentBoard,newPos) <- readFormParams
+    let currentPlayer = nextMoveOn currentBoard
     case currentPlayer `movedTo` newPos $ currentBoard of
         Nothing -> ($ currentBoard) $
             response
@@ -63,4 +62,4 @@ processRequest = do
             else if ($ newBoard) isFull then
                 response "You played a draw." X
             else
-                movingResponse (moveAfter currentPlayer)
+                movingResponse (nextMoveOn newBoard)

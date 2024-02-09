@@ -17,7 +17,7 @@ fullNotWinBoard = fromLists [
     ]
 winBoard = fromLists [
     [Just X, Nothing, Just O],
-    [Just X, Just O, Just O],
+    [Just X, Just O, Nothing],
     [Just O, Just X, Nothing]
     ]
 
@@ -31,7 +31,6 @@ spec = describe "boardToHtml" $ do
     it "contains form with table inside" $ do
         showBoard emptyBoard `shouldStartWith`
             "\"<form method=\\\"post\\\">\
-                \<input type=\\\"hidden\\\" name=\\\"move\\\" value=\\\"X\\\">\
                 \<input type=\\\"hidden\\\" name=\\\"board\\\" value=\\\"\
                     \[[Nothing,Nothing,Nothing],\
                     \[Nothing,Nothing,Nothing],\
