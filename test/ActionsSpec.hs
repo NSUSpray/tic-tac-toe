@@ -4,6 +4,7 @@ module ActionsSpec where
 
 import Data.List
 
+import Data.ByteString.Lazy.UTF8 (toString)
 import Test.Hspec
 import Test.Hspec.Wai
 
@@ -14,32 +15,32 @@ import Board
 rEmptyBoard, rNonEmptyBoard :: String
 rEmptyBoard =
     "<table><tbody><tr>\
-    \<td><button name=\\\"pos\\\" value=\\\"(1,1)\\\">X</button></td>\
-    \<td><button name=\\\"pos\\\" value=\\\"(1,2)\\\">X</button></td>\
-    \<td><button name=\\\"pos\\\" value=\\\"(1,3)\\\">X</button></td>\
+    \<td><button name=\"pos\" value=\"(1,1)\">X</button></td>\
+    \<td><button name=\"pos\" value=\"(1,2)\">X</button></td>\
+    \<td><button name=\"pos\" value=\"(1,3)\">X</button></td>\
     \</tr><tr>\
-    \<td><button name=\\\"pos\\\" value=\\\"(2,1)\\\">X</button></td>\
-    \<td><button name=\\\"pos\\\" value=\\\"(2,2)\\\">X</button></td>\
-    \<td><button name=\\\"pos\\\" value=\\\"(2,3)\\\">X</button></td>\
+    \<td><button name=\"pos\" value=\"(2,1)\">X</button></td>\
+    \<td><button name=\"pos\" value=\"(2,2)\">X</button></td>\
+    \<td><button name=\"pos\" value=\"(2,3)\">X</button></td>\
     \</tr><tr>\
-    \<td><button name=\\\"pos\\\" value=\\\"(3,1)\\\">X</button></td>\
-    \<td><button name=\\\"pos\\\" value=\\\"(3,2)\\\">X</button></td>\
-    \<td><button name=\\\"pos\\\" value=\\\"(3,3)\\\">X</button></td>\
-    \</tr></tbody>"
+    \<td><button name=\"pos\" value=\"(3,1)\">X</button></td>\
+    \<td><button name=\"pos\" value=\"(3,2)\">X</button></td>\
+    \<td><button name=\"pos\" value=\"(3,3)\">X</button></td>\
+    \</tr></tbody></table>"
 rNonEmptyBoard =
     "<table><tbody><tr>\
-    \<td><button name=\\\"pos\\\" value=\\\"(1,1)\\\">O</button></td>\
-    \<td><button name=\\\"pos\\\" value=\\\"(1,2)\\\">O</button></td>\
-    \<td><button name=\\\"pos\\\" value=\\\"(1,3)\\\">O</button></td>\
+    \<td><button name=\"pos\" value=\"(1,1)\">O</button></td>\
+    \<td><button name=\"pos\" value=\"(1,2)\">O</button></td>\
+    \<td><button name=\"pos\" value=\"(1,3)\">O</button></td>\
     \</tr><tr>\
-    \<td><button name=\\\"pos\\\" value=\\\"(2,1)\\\">O</button></td>\
-    \<td><button name=\\\"pos\\\" value=\\\"(2,2)\\\">O</button></td>\
-    \<td><button name=\\\"pos\\\" value=\\\"(2,3)\\\">O</button></td>\
+    \<td><button name=\"pos\" value=\"(2,1)\">O</button></td>\
+    \<td><button name=\"pos\" value=\"(2,2)\">O</button></td>\
+    \<td><button name=\"pos\" value=\"(2,3)\">O</button></td>\
     \</tr><tr>\
     \<td>X</td>\
-    \<td><button name=\\\"pos\\\" value=\\\"(3,2)\\\">O</button></td>\
-    \<td><button name=\\\"pos\\\" value=\\\"(3,3)\\\">O</button></td>\
-    \</tr></tbody>"
+    \<td><button name=\"pos\" value=\"(3,2)\">O</button></td>\
+    \<td><button name=\"pos\" value=\"(3,3)\">O</button></td>\
+    \</tr></tbody></table>"
 
 vEmptyBoard, vXBoard, vXXBoard, vPreFullBoard :: String
 vEmptyBoard = show $ toLists emptyBoard
@@ -60,11 +61,12 @@ vPreFullBoard = show [
     ]
 
 
-match :: Show a => a -> (a -> String -> Bool) -> b -> ResponseMatcher
+match :: String -> (String -> String -> Bool) -> b -> ResponseMatcher
 match s p _ = ResponseMatcher 200 [] $ MatchBody $ \_ body ->
-    if s `p` show body then Nothing
-        else Just $
-            "Response body\n" ++ show body ++ "\ndoes nоt satisfy\n" ++ show s
+    let sBody = toString body in
+    if s `p` sBody then Nothing
+    else Just $
+        "Response body\n" ++ show sBody ++ "\ndoes nоt satisfy\n" ++ show s
 
 respond'sBody :: a
 respond'sBody = error
@@ -80,8 +82,7 @@ spec = with app $ do
             get "/" `shouldRespondWith` match
                 rEmptyBoard isInfixOf respond'sBody
             get "/" `shouldRespondWith` match
-                "<h1>Move of \\226\\128\\152X\\226\\128\\153:</h1>"
-                    isInfixOf respond'sBody
+                "<h1>Move of ‘X’:</h1>" isInfixOf respond'sBody
 
     describe "POST" $ do
 
@@ -93,8 +94,7 @@ spec = with app $ do
                 postMove `shouldRespondWith` match
                     rNonEmptyBoard isInfixOf respond'sBody
                 postMove `shouldRespondWith` match
-                    "<h1>Move of \\226\\128\\152O\\226\\128\\153:</h1>"
-                        isInfixOf respond'sBody
+                    "<h1>Move of ‘O’:</h1>" isInfixOf respond'sBody
 
         context "when 'O' moves to non-empty cell" $
             it "revokes move and proposes 'O' to choose another cell" $ do
@@ -104,8 +104,8 @@ spec = with app $ do
                 postMove `shouldRespondWith` match
                     rNonEmptyBoard isInfixOf respond'sBody
                 postMove `shouldRespondWith` match
-                    "<h1>This cell is already occupied. \\226\\128\\152O\\226\
-                        \\\128\\153, please choose another:</h1>"
+                    "<h1>This cell is already occupied. ‘O’, please choose \
+                        \another:</h1>"
                             isInfixOf respond'sBody
 
         context "when 'X' moves and wins" $
@@ -114,10 +114,9 @@ spec = with app $ do
                     params = [("board", vXXBoard), ("pos","(1,3)")]
                     postMove = postHtmlForm "/" params
                 postMove `shouldRespondWith` match
-                    "<h1>\\226\\128\\152X\\226\\128\\153 wins!</h1>"
-                            isInfixOf respond'sBody
+                    "<h1>‘X’ wins!</h1>" isInfixOf respond'sBody
                 postMove `shouldRespondWith` match
-                    "<button name=\\\"pos\\\" value=\\\"("
+                    "<button name=\"pos\" value=\"("
                         (\a b -> not $ a `isInfixOf` b) respond'sBody
 
         context "when 'X' tooks last cell and nobody wins" $
@@ -128,7 +127,7 @@ spec = with app $ do
                 postMove `shouldRespondWith` match
                     "<h1>You played a draw.</h1>" isInfixOf respond'sBody
                 postMove `shouldRespondWith` match
-                    "<button name=\\\"pos\\\" value=\\\"("
+                    "<button name=\"pos\" value=\"("
                         (\a b -> not $ a `isInfixOf` b) respond'sBody
 
         context "when any form param is invalid" $
@@ -136,7 +135,7 @@ spec = with app $ do
                 let
                     params1 = [("board", tail vEmptyBoard), ("pos","(3,1)")]
                     params2 = [("board", vEmptyBoard), ("pos","{3;1}")]
-                    h1 = "<h1>Something went wrong. You\\226\\128\\153ll have\
+                    h1 = "<h1>Something went wrong. You’ll have\
                         \ to start over :(</h1>"
                 mapM_ (\params -> do
                     let postMove = postHtmlForm "/" params

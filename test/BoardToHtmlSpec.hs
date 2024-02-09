@@ -1,7 +1,6 @@
 module BoardToHtmlSpec where
 
-import Data.List
-
+import Data.Text.Lazy (unpack)
 import Test.Hspec
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 
@@ -22,22 +21,22 @@ winBoard = fromLists [
     ]
 
 buttonSubstring :: String
-buttonSubstring = "<button name=\\\"pos\\\" value=\\\"("
+buttonSubstring = "<button name=\"pos\" value=\"("
 
 
 spec :: Spec
 spec = describe "boardToHtml" $ do
-    let showBoard = show . renderHtml . boardToHtml X
+    let showBoard = unpack . renderHtml . boardToHtml X
     it "contains form with table inside" $ do
         showBoard emptyBoard `shouldStartWith`
-            "\"<form method=\\\"post\\\">\
-                \<input type=\\\"hidden\\\" name=\\\"board\\\" value=\\\"\
+            "<form method=\"post\">\
+                \<input type=\"hidden\" name=\"board\" value=\"\
                     \[[Nothing,Nothing,Nothing],\
                     \[Nothing,Nothing,Nothing],\
                     \[Nothing,Nothing,Nothing]]\
-                \\\\"><table><tbody><tr><td>"
+                \\"><table><tbody><tr><td>"
         showBoard emptyBoard `shouldEndWith`
-            "</td></tr></tbody></table></form>\""
+            "</td></tr></tbody></table></form>"
     context "when nobody wins and where is at least one empty cell" $
         it "contains button for possible move" $
             showBoard emptyBoard `shouldContain` buttonSubstring
