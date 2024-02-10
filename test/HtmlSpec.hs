@@ -25,24 +25,27 @@ buttonSubstring = "<button name=\"pos\" value=\"("
 
 
 spec :: Spec
-spec = describe "fromBoard" $ do
-    let showBoard = unpack . renderHtml . Html.fromBoard X
-    it "contains form with table inside" $ do
-        showBoard emptyBoard `shouldStartWith`
-            "<form method=\"post\">\
-                \<input type=\"hidden\" name=\"board\" value=\"\
-                    \[[Nothing,Nothing,Nothing],\
-                    \[Nothing,Nothing,Nothing],\
-                    \[Nothing,Nothing,Nothing]]\
-                \\"><table><tbody><tr><td>"
-        showBoard emptyBoard `shouldEndWith`
-            "</td></tr></tbody></table></form>"
+spec = describe "template" $ do
+    let showTemplate = unpack . renderHtml . Html.template "Move of {}:"
+    it "contains html with form and table inside" $ do
+        showTemplate emptyBoard `shouldStartWith`
+            "<!DOCTYPE HTML>\n<html><head><title>Tic-tac-toe</title>\
+                \<link rel=\"stylesheet\" href=\"/main.css\">\
+                \<link rel=\"icon\" href=\"/favicon.png\" type=\"image/png\">\
+                \</head><body><h1>Move of ‘X’:</h1>\
+                \<form method=\"post\">\
+                    \<input type=\"hidden\" name=\"board\" value=\"[["
+        showTemplate emptyBoard `shouldContain`
+            "]]\"><table><tbody><tr><td>"
+        showTemplate emptyBoard `shouldEndWith`
+            "</td></tr></tbody></table></form>\
+            \<form><p><button>Restart</button></p></form></body></html>"
     context "when nobody wins and where is at least one empty cell" $
         it "contains button for possible move" $
-            showBoard emptyBoard `shouldContain` buttonSubstring
+            showTemplate emptyBoard `shouldContain` buttonSubstring
     context "when where are no empty cells on the board" $
         it "contains only contents of cells" $
-            showBoard fullNotWinBoard `shouldNotContain` buttonSubstring
+            showTemplate fullNotWinBoard `shouldNotContain` buttonSubstring
     context "when anybody wins" $
         it "contains only contents of cells" $
-            showBoard winBoard `shouldNotContain` buttonSubstring
+            showTemplate winBoard `shouldNotContain` buttonSubstring

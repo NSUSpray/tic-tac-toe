@@ -5,7 +5,6 @@ module Actions (movingResponse,processMove) where
 import Text.Read (readMaybe)
 
 import Text.Blaze.Html5 as H
-import Text.Blaze.Html5.Attributes hiding (form,title)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import qualified Web.Scotty as S
 
@@ -14,20 +13,7 @@ import qualified Html
 
 
 response :: String -> Board -> S.ActionM ()
-response msg board = S.html $ renderHtml $ docTypeHtml $ do
-    H.head $ do
-        title "Tic-tac-toe"
-        link ! rel "stylesheet" ! href "/main.css"
-        link ! rel "icon" ! href "/favicon.png" ! type_ "image/png"
-    body $ do
-        h1 $ toHtml $ subsMove msg
-        Html.fromBoard move board
-        form $ p $ button "Restart"
-    where
-        subsMove ('{':'}':xs) = "‘" ++ show move ++ "’" ++ xs
-        subsMove (x:xs) = x : subsMove xs
-        subsMove "" = ""
-        move = (if anyWinsOn board then lastMoveOn else nextMoveOn) board
+response msg = S.html . renderHtml . Html.template msg
 
 movingResponse :: Board -> S.ActionM ()
 movingResponse = response "Move of {}:"
