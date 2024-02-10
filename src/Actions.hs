@@ -13,8 +13,8 @@ import Board
 import BoardToHtml
 
 
-response :: String -> Move -> Board -> S.ActionM ()
-response msg move board = S.html $ renderHtml $ docTypeHtml $ do
+response :: String -> Board -> S.ActionM ()
+response msg board = S.html $ renderHtml $ docTypeHtml $ do
     H.head $ do
         title "Tic-tac-toe"
         link ! rel "stylesheet" ! href "/main.css"
@@ -27,8 +27,9 @@ response msg move board = S.html $ renderHtml $ docTypeHtml $ do
         subsMove ('{':'}':xs) = "‘" ++ show move ++ "’" ++ xs
         subsMove (x:xs) = x : subsMove xs
         subsMove "" = ""
+        move = (if anyWinsOn board then lastMoveOn else nextMoveOn) board
 
-movingResponse :: Move -> Board -> S.ActionM ()
+movingResponse :: Board -> S.ActionM ()
 movingResponse = response "Move of {}:"
 
 
@@ -42,8 +43,8 @@ readFormParams = do
         return (fromLists cells, pos)
         of
         Nothing -> do
-            response "Something went wrong. You’ll have to start over :("
-                X emptyBoard
+            response
+                "Something went wrong. You’ll have to start over :(" emptyBoard
             S.finish
         Just res -> return res
 
@@ -55,11 +56,10 @@ processRequest = do
         Nothing -> ($ currentBoard) $
             response
                 "This cell is already occupied. {}, please choose another:"
-                currentPlayer
         Just newBoard -> ($ newBoard) $
             if currentPlayer `winsOn` newBoard then
-                response "{} wins!" currentPlayer
+                response "{} wins!"
             else if ($ newBoard) isFull then
-                response "You played a draw." X
+                response "You played a draw."
             else
-                movingResponse (nextMoveOn newBoard)
+                movingResponse

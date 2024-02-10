@@ -13,7 +13,7 @@ import Actions
 routes :: S.ScottyM ()
 routes = do
     S.middleware $ staticPolicy (noDots >-> addBase "static")
-    S.get "/" $ movingResponse X emptyBoard
+    S.get "/" $ movingResponse emptyBoard
     S.post "/" processRequest
 
 app :: IO Application

@@ -18,10 +18,13 @@ emptyBoardOfSize n = matrix n n $ const Nothing
 emptyBoard :: Board
 emptyBoard = emptyBoardOfSize 3
 
-nextMoveOn :: Board -> Move
-nextMoveOn board = if count X > count O then O else X
+lastMoveOn :: Board -> Move
+lastMoveOn board = if count X > count O then X else O
     where
         count move = length $ filter (== Just move) $ concat $ toLists board
+
+nextMoveOn :: Board -> Move
+nextMoveOn board = case lastMoveOn board of { X -> O; O -> X }
 
 putOn :: Cell -> Pos -> Board -> Maybe Board
 putOn = safeSet

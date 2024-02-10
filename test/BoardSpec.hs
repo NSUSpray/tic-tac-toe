@@ -40,6 +40,14 @@ spec = do
         it "makes empty board" $
             emptyBoard `shouldSatisfy` all isNothing
 
+    describe "lastMoveOn" $ do
+        context "when last move was X" $
+            it "returns X" $
+                lastMoveOn sampleBoard `shouldBe` X
+        context "when last move was O" $
+            it "returns O" $
+                lastMoveOn emptyBoard `shouldBe` O
+
     describe "nextMoveOn" $ do
         context "when last move was X" $
             it "returns O" $
