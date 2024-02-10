@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Actions (movingResponse,processRequest) where
+module Actions (movingResponse,processMove) where
 
 import Text.Read (readMaybe)
 
@@ -10,7 +10,7 @@ import Text.Blaze.Html.Renderer.Text (renderHtml)
 import qualified Web.Scotty as S
 
 import Board
-import BoardToHtml
+import qualified Html
 
 
 response :: String -> Board -> S.ActionM ()
@@ -21,7 +21,7 @@ response msg board = S.html $ renderHtml $ docTypeHtml $ do
         link ! rel "icon" ! href "/favicon.png" ! type_ "image/png"
     body $ do
         h1 $ toHtml $ subsMove msg
-        boardToHtml move board
+        Html.fromBoard move board
         form $ p $ button "Restart"
     where
         subsMove ('{':'}':xs) = "‘" ++ show move ++ "’" ++ xs
@@ -35,11 +35,11 @@ movingResponse = response "Move of {}:"
 
 readFormParams :: S.ActionM (Board,Pos)
 readFormParams = do
-    sCells <- S.formParam "board"
-    sPos <- S.formParam "pos"
+    cellsStr <- S.formParam "board"
+    posStr <- S.formParam "pos"
     case do
-        cells <- readMaybe sCells
-        pos <- readMaybe sPos
+        cells <- readMaybe cellsStr
+        pos <- readMaybe posStr
         return (fromLists cells, pos)
         of
         Nothing -> do
@@ -48,8 +48,8 @@ readFormParams = do
             S.finish
         Just res -> return res
 
-processRequest :: S.ActionM ()
-processRequest = do
+processMove :: S.ActionM ()
+processMove = do
     (currentBoard,newPos) <- readFormParams
     let currentPlayer = nextMoveOn currentBoard
     case currentPlayer `movedTo` newPos $ currentBoard of

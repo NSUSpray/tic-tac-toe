@@ -4,7 +4,7 @@ import Test.Hspec
 
 import qualified ActionsSpec
 import qualified BoardSpec
-import qualified BoardToHtmlSpec
+import qualified HtmlSpec
 
 
 main :: IO ()
@@ -14,4 +14,4 @@ spec :: Spec
 spec = do
     describe "Actions" ActionsSpec.spec
     describe "Board" BoardSpec.spec
-    describe "BoardToHtml" BoardToHtmlSpec.spec
+    describe "Html" HtmlSpec.spec

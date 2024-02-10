@@ -1,11 +1,11 @@
-module BoardToHtmlSpec where
+module HtmlSpec where
 
 import Data.Text.Lazy (unpack)
 import Test.Hspec
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 
 import Board
-import BoardToHtml
+import qualified Html
 
 
 fullNotWinBoard, winBoard :: Board
@@ -25,8 +25,8 @@ buttonSubstring = "<button name=\"pos\" value=\"("
 
 
 spec :: Spec
-spec = describe "boardToHtml" $ do
-    let showBoard = unpack . renderHtml . boardToHtml X
+spec = describe "fromBoard" $ do
+    let showBoard = unpack . renderHtml . Html.fromBoard X
     it "contains form with table inside" $ do
         showBoard emptyBoard `shouldStartWith`
             "<form method=\"post\">\

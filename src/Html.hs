@@ -1,30 +1,30 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module BoardToHtml (boardToHtml) where
+module Html (fromBoard) where
 
 import Control.Monad (forM_)
 
-import Text.Blaze.Html5
+import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes hiding (form)
 
 import Board
 
 
-cellToHtml :: Move -> Bool -> (Pos,Cell) -> Html
-cellToHtml possibleMove anyWins (pos,cell) = case (anyWins,cell) of
+fromCell :: Move -> Bool -> (Pos,Cell) -> Html
+fromCell possibleMove anyWins (pos,cell) = case (anyWins,cell) of
     (False,Nothing) ->
-        button ! name "pos" ! value vPos $
+        button ! name "pos" ! value posVal $
             toHtml $ show possibleMove
-        where vPos = toValue $ show pos
+        where posVal = toValue $ show pos
     (_, Just madeMove) -> toHtml $ show madeMove
     (True,_) -> text " "
 
-boardToHtml :: Move -> Board -> Html
-boardToHtml move board = form ! method "post" $ do
+fromBoard :: Move -> Board -> Html
+fromBoard move board = form ! method "post" $ do
     input
         ! type_ "hidden"
         ! name "board"
         ! value (toValue $ show $ toLists board)
     table $ tbody $ forM_ (rowsOf board) $ tr . mapM_ tdFromCell
     where
-        tdFromCell = td . cellToHtml move (anyWinsOn board)
+        tdFromCell = td . fromCell move (anyWinsOn board)

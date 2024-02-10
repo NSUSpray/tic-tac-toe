@@ -12,8 +12,8 @@ import App (app)
 import Board
 
 
-rEmptyBoard, rNonEmptyBoard :: String
-rEmptyBoard =
+emptyBoardResp, nonEmptyBoardResp :: String
+emptyBoardResp =
     "<table><tbody><tr>\
     \<td><button name=\"pos\" value=\"(1,1)\">X</button></td>\
     \<td><button name=\"pos\" value=\"(1,2)\">X</button></td>\
@@ -27,7 +27,7 @@ rEmptyBoard =
     \<td><button name=\"pos\" value=\"(3,2)\">X</button></td>\
     \<td><button name=\"pos\" value=\"(3,3)\">X</button></td>\
     \</tr></tbody></table>"
-rNonEmptyBoard =
+nonEmptyBoardResp =
     "<table><tbody><tr>\
     \<td><button name=\"pos\" value=\"(1,1)\">O</button></td>\
     \<td><button name=\"pos\" value=\"(1,2)\">O</button></td>\
@@ -42,19 +42,19 @@ rNonEmptyBoard =
     \<td><button name=\"pos\" value=\"(3,3)\">O</button></td>\
     \</tr></tbody></table>"
 
-vEmptyBoard, vXBoard, vXXBoard, vPreFullBoard :: String
-vEmptyBoard = show $ toLists emptyBoard
-vXBoard = show [
+emptyBoardVal, xBoardVal, xxBoardVal, preFullBoardVal :: String
+emptyBoardVal = show $ toLists emptyBoard
+xBoardVal = show [
     [Nothing,Nothing,Nothing],
     [Nothing,Nothing,Nothing],
     [Just X, Nothing, Nothing]
     ]
-vXXBoard = show [
+xxBoardVal = show [
     [Nothing,Nothing,Nothing],
     [Just O, Just X, Nothing],
     [Just X, Just O, Nothing]
     ]
-vPreFullBoard = show [
+preFullBoardVal = show [
     [Just X, Just O, Just X],
     [Just O, Just O, Just X],
     [Nothing, Just X, Just O]
@@ -63,10 +63,10 @@ vPreFullBoard = show [
 
 match :: String -> (String -> String -> Bool) -> b -> ResponseMatcher
 match s p _ = ResponseMatcher 200 [] $ MatchBody $ \_ body ->
-    let sBody = toString body in
-    if s `p` sBody then Nothing
+    let bodyStr = toString body in
+    if s `p` bodyStr then Nothing
     else Just $
-        "Response body\n" ++ show sBody ++ "\ndoes nоt satisfy\n" ++ show s
+        "Response body\n" ++ show bodyStr ++ "\ndoes nоt satisfy\n" ++ show s
 
 respond'sBody :: a
 respond'sBody = error
@@ -80,7 +80,7 @@ spec = with app $ do
 
         it "responds with empty board and move of 'X'" $ do
             get "/" `shouldRespondWith` match
-                rEmptyBoard isInfixOf respond'sBody
+                emptyBoardResp isInfixOf respond'sBody
             get "/" `shouldRespondWith` match
                 "<h1>Move of ‘X’:</h1>" isInfixOf respond'sBody
 
@@ -89,20 +89,20 @@ spec = with app $ do
         context "when 'X' moves to empty cell" $
             it "responds with updated board and move of 'O'" $ do
                 let
-                    params = [("board", vEmptyBoard), ("pos","(3,1)")]
+                    params = [("board", emptyBoardVal), ("pos","(3,1)")]
                     postMove = postHtmlForm "/" params
                 postMove `shouldRespondWith` match
-                    rNonEmptyBoard isInfixOf respond'sBody
+                    nonEmptyBoardResp isInfixOf respond'sBody
                 postMove `shouldRespondWith` match
                     "<h1>Move of ‘O’:</h1>" isInfixOf respond'sBody
 
         context "when 'O' moves to non-empty cell" $
             it "revokes move and proposes 'O' to choose another cell" $ do
                 let
-                    params = [("board", vXBoard), ("pos","(3,1)")]
+                    params = [("board", xBoardVal), ("pos","(3,1)")]
                     postMove = postHtmlForm "/" params
                 postMove `shouldRespondWith` match
-                    rNonEmptyBoard isInfixOf respond'sBody
+                    nonEmptyBoardResp isInfixOf respond'sBody
                 postMove `shouldRespondWith` match
                     "<h1>This cell is already occupied. ‘O’, please choose \
                         \another:</h1>"
@@ -111,7 +111,7 @@ spec = with app $ do
         context "when 'X' moves and wins" $
             it "congratulates 'X' and finishes the game" $ do
                 let
-                    params = [("board", vXXBoard), ("pos","(1,3)")]
+                    params = [("board", xxBoardVal), ("pos","(1,3)")]
                     postMove = postHtmlForm "/" params
                 postMove `shouldRespondWith` match
                     "<h1>‘X’ wins!</h1>" isInfixOf respond'sBody
@@ -122,7 +122,7 @@ spec = with app $ do
         context "when 'X' tooks last cell and nobody wins" $
             it "reports a draw and finishes the game" $ do
                 let
-                    params = [("board", vPreFullBoard), ("pos","(3,1)")]
+                    params = [("board", preFullBoardVal), ("pos","(3,1)")]
                     postMove = postHtmlForm "/" params
                 postMove `shouldRespondWith` match
                     "<h1>You played a draw.</h1>" isInfixOf respond'sBody
@@ -133,8 +133,8 @@ spec = with app $ do
         context "when any form param is invalid" $
             it "reports a problem and restarts the game" $ do
                 let
-                    params1 = [("board", tail vEmptyBoard), ("pos","(3,1)")]
-                    params2 = [("board", vEmptyBoard), ("pos","{3;1}")]
+                    params1 = [("board", tail emptyBoardVal), ("pos","(3,1)")]
+                    params2 = [("board", emptyBoardVal), ("pos","{3;1}")]
                     h1 = "<h1>Something went wrong. You’ll have\
                         \ to start over :(</h1>"
                 mapM_ (\params -> do
@@ -142,5 +142,5 @@ spec = with app $ do
                     postMove `shouldRespondWith` match
                         h1 isInfixOf respond'sBody
                     postMove `shouldRespondWith` match
-                        rEmptyBoard isInfixOf respond'sBody
+                        emptyBoardResp isInfixOf respond'sBody
                     ) [params1,params2]
