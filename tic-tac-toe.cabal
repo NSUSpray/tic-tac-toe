@@ -62,17 +62,23 @@ library
         Actions,
         App,
         Board,
-        Html
+        Html,
+        Sessions
     hs-source-dirs:
         src
     build-depends:
         base ^>=4.17.2.1,
         blaze-html ^>=0.9.1.2,
+        containers ^>=0.6.7,
         matrix ^>=0.3.6.3,
         scotty ^>=0.21,
+        stm ^>=2.5.3,
+        text ^>=2.1,
+        utf8-string ^>=1.0.2,
         wai ^>=3.2.4,
         wai-extra ^>=3.1.14,
         wai-middleware-static ^>=0.9,
+        wai-session
     default-language: Haskell2010
 
 executable tic-tac-toe
@@ -111,8 +117,9 @@ test-suite tic-tac-toe-test
         blaze-html ^>=0.9.1.2,
         hspec ^>=2.11.7,
         hspec-wai ^>=0.11.1,
-        text ^>=2.0.2,
+        text ^>=2.1,
         tic-tac-toe,
-        utf8-string ^>=1.0.2
+        utf8-string ^>=1.0.2,
+        wai-extra ^>=3.1.14
     hs-source-dirs:   test
     default-language: Haskell2010

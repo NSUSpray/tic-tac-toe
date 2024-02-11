@@ -33,13 +33,11 @@ spec = describe "template" $ do
                 \<link rel=\"stylesheet\" href=\"/main.css\">\
                 \<link rel=\"icon\" href=\"/favicon.png\" type=\"image/png\">\
                 \</head><body><h1>Move of ‘X’:</h1>\
-                \<form method=\"post\">\
-                    \<input type=\"hidden\" name=\"board\" value=\"[["
-        showTemplate emptyBoard `shouldContain`
-            "]]\"><table><tbody><tr><td>"
+                \<form method=\"post\"><table><tbody><tr><td>"
         showTemplate emptyBoard `shouldEndWith`
             "</td></tr></tbody></table></form>\
-            \<form><p><button>Restart</button></p></form></body></html>"
+            \<form action=\"/restart\"><p><button>Restart</button></p></form>\
+            \</body></html>"
     context "when nobody wins and where is at least one empty cell" $
         it "contains button for possible move" $
             showTemplate emptyBoard `shouldContain` buttonSubstring

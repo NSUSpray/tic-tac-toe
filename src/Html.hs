@@ -21,10 +21,6 @@ fromCell possibleMove anyWins (pos,cell) = case (anyWins,cell) of
 
 fromBoard :: Move -> Board -> Html
 fromBoard move board = form ! method "post" $ do
-    input
-        ! type_ "hidden"
-        ! name "board"
-        ! value (toValue $ show $ toLists board)
     table $ tbody $ forM_ (rowsOf board) $ tr . mapM_ tdFromCell
     where
         tdFromCell = td . fromCell move (anyWinsOn board)
@@ -38,7 +34,7 @@ template msg board = docTypeHtml $ do
     body $ do
         h1 $ toHtml $ subsPlayer msg
         fromBoard move board
-        form $ p $ button "Restart"
+        form ! action "/restart" $ p $ button "Restart"
     where
         subsPlayer ('{':'}':xs) = "‘" ++ show move ++ "’" ++ xs
         subsPlayer (x:xs) = x : subsPlayer xs

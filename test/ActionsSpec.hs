@@ -4,16 +4,19 @@ module ActionsSpec where
 
 import Data.List
 
-import Data.ByteString.Lazy.UTF8 (toString)
+import qualified Data.ByteString.Lazy.UTF8 as LazyBytes (toString)
+import qualified Data.ByteString.UTF8 as Bytes (toString)
 import Test.Hspec
 import Test.Hspec.Wai
+import Network.Wai.Test (simpleHeaders)
 
 import App (app)
 import Board
+import qualified Sessions (Var,cookieName,writeBoard)
 
 
-emptyBoardResp, nonEmptyBoardResp :: String
-emptyBoardResp =
+emptyBoardResponse, nonEmptyBoardResponse :: String
+emptyBoardResponse =
     "<table><tbody><tr>\
     \<td><button name=\"pos\" value=\"(1,1)\">X</button></td>\
     \<td><button name=\"pos\" value=\"(1,2)\">X</button></td>\
@@ -27,7 +30,7 @@ emptyBoardResp =
     \<td><button name=\"pos\" value=\"(3,2)\">X</button></td>\
     \<td><button name=\"pos\" value=\"(3,3)\">X</button></td>\
     \</tr></tbody></table>"
-nonEmptyBoardResp =
+nonEmptyBoardResponse =
     "<table><tbody><tr>\
     \<td><button name=\"pos\" value=\"(1,1)\">O</button></td>\
     \<td><button name=\"pos\" value=\"(1,2)\">O</button></td>\
@@ -42,19 +45,18 @@ nonEmptyBoardResp =
     \<td><button name=\"pos\" value=\"(3,3)\">O</button></td>\
     \</tr></tbody></table>"
 
-emptyBoardVal, xBoardVal, xxBoardVal, preFullBoardVal :: String
-emptyBoardVal = show $ toLists emptyBoard
-xBoardVal = show [
+xBoard, xxBoard, preFullBoard :: Board
+xBoard = fromLists [
     [Nothing,Nothing,Nothing],
     [Nothing,Nothing,Nothing],
     [Just X, Nothing, Nothing]
     ]
-xxBoardVal = show [
-    [Nothing,Nothing,Nothing],
-    [Just O, Just X, Nothing],
-    [Just X, Just O, Nothing]
+xxBoard = fromLists [
+    [Nothing, Just O, Just X],
+    [Nothing, Just X, Just O],
+    [Nothing,Nothing,Nothing]
     ]
-preFullBoardVal = show [
+preFullBoard = fromLists [
     [Just X, Just O, Just X],
     [Just O, Just O, Just X],
     [Nothing, Just X, Just O]
@@ -63,84 +65,79 @@ preFullBoardVal = show [
 
 match :: String -> (String -> String -> Bool) -> b -> ResponseMatcher
 match s p _ = ResponseMatcher 200 [] $ MatchBody $ \_ body ->
-    let bodyStr = toString body in
+    let bodyStr = LazyBytes.toString body in
     if s `p` bodyStr then Nothing
     else Just $
         "Response body\n" ++ show bodyStr ++ "\ndoes nоt satisfy\n" ++ show s
 
-respond'sBody :: a
-respond'sBody = error
+responseBody :: a
+responseBody = error
     "It's a dummy for the last argument of 'match' function, not for evaluate."
+
+updateSessionWith :: Board -> WaiSession Sessions.Var ()
+updateSessionWith board = do
+    sessionsVar <- getState
+    response <- get "/"
+    let (Just cookies) = lookup "Set-Cookie" $ simpleHeaders response
+        (Just sessionId) = stripPrefix (Sessions.cookieName ++ "=") $
+            Bytes.toString cookies
+    liftIO $ Sessions.writeBoard sessionsVar sessionId board
 
 
 spec :: Spec
-spec = with app $ do
+spec = withState app $ do
 
     describe "GET" $
 
         it "responds with empty board and move of 'X'" $ do
-            get "/" `shouldRespondWith` match
-                emptyBoardResp isInfixOf respond'sBody
-            get "/" `shouldRespondWith` match
-                "<h1>Move of ‘X’:</h1>" isInfixOf respond'sBody
+            let getRoot = get "/"
+            getRoot `shouldRespondWith` match
+                emptyBoardResponse isInfixOf responseBody
+            getRoot `shouldRespondWith` match
+                "<h1>Move of ‘X’:</h1>" isInfixOf responseBody
 
     describe "POST" $ do
 
+        let postMove'3'1 = postHtmlForm "/" [("pos","(3,1)")]
+
         context "when 'X' moves to empty cell" $
             it "responds with updated board and move of 'O'" $ do
-                let
-                    params = [("board", emptyBoardVal), ("pos","(3,1)")]
-                    postMove = postHtmlForm "/" params
-                postMove `shouldRespondWith` match
-                    nonEmptyBoardResp isInfixOf respond'sBody
-                postMove `shouldRespondWith` match
-                    "<h1>Move of ‘O’:</h1>" isInfixOf respond'sBody
+                postMove'3'1 `shouldRespondWith` match
+                    nonEmptyBoardResponse isInfixOf responseBody
+                postMove'3'1 `shouldRespondWith` match
+                    "<h1>Move of ‘O’:</h1>" isInfixOf responseBody
 
         context "when 'O' moves to non-empty cell" $
             it "revokes move and proposes 'O' to choose another cell" $ do
-                let
-                    params = [("board", xBoardVal), ("pos","(3,1)")]
-                    postMove = postHtmlForm "/" params
-                postMove `shouldRespondWith` match
-                    nonEmptyBoardResp isInfixOf respond'sBody
-                postMove `shouldRespondWith` match
+                updateSessionWith xBoard
+                postMove'3'1 `shouldRespondWith` match
                     "<h1>This cell is already occupied. ‘O’, please choose \
                         \another:</h1>"
-                            isInfixOf respond'sBody
+                            isInfixOf responseBody
 
         context "when 'X' moves and wins" $
             it "congratulates 'X' and finishes the game" $ do
-                let
-                    params = [("board", xxBoardVal), ("pos","(1,3)")]
-                    postMove = postHtmlForm "/" params
-                postMove `shouldRespondWith` match
-                    "<h1>‘X’ wins!</h1>" isInfixOf respond'sBody
-                postMove `shouldRespondWith` match
+                updateSessionWith xxBoard
+                postMove'3'1 `shouldRespondWith` match
+                    "<h1>‘X’ wins!</h1>" isInfixOf responseBody
+                postMove'3'1 `shouldRespondWith` match
                     "<button name=\"pos\" value=\"("
-                        (\a b -> not $ a `isInfixOf` b) respond'sBody
+                        (\a b -> not $ a `isInfixOf` b) responseBody
 
         context "when 'X' tooks last cell and nobody wins" $
             it "reports a draw and finishes the game" $ do
-                let
-                    params = [("board", preFullBoardVal), ("pos","(3,1)")]
-                    postMove = postHtmlForm "/" params
-                postMove `shouldRespondWith` match
-                    "<h1>You played a draw.</h1>" isInfixOf respond'sBody
-                postMove `shouldRespondWith` match
+                updateSessionWith preFullBoard
+                postMove'3'1 `shouldRespondWith` match
+                    "<h1>You played a draw.</h1>" isInfixOf responseBody
+                postMove'3'1 `shouldRespondWith` match
                     "<button name=\"pos\" value=\"("
-                        (\a b -> not $ a `isInfixOf` b) respond'sBody
+                        (\a b -> not $ a `isInfixOf` b) responseBody
 
-        context "when any form param is invalid" $
+        context "when 'pos' form param is invalid" $
             it "reports a problem and restarts the game" $ do
-                let
-                    params1 = [("board", tail emptyBoardVal), ("pos","(3,1)")]
-                    params2 = [("board", emptyBoardVal), ("pos","{3;1}")]
-                    h1 = "<h1>Something went wrong. You’ll have\
-                        \ to start over :(</h1>"
-                mapM_ (\params -> do
-                    let postMove = postHtmlForm "/" params
-                    postMove `shouldRespondWith` match
-                        h1 isInfixOf respond'sBody
-                    postMove `shouldRespondWith` match
-                        emptyBoardResp isInfixOf respond'sBody
-                    ) [params1,params2]
+                let postMove = postHtmlForm "/" [("pos","{3;1}")]
+                postMove `shouldRespondWith` match
+                    "<h1>Something went wrong. ‘X’, please try again:</h1>"
+                        isInfixOf responseBody
+                postMove `shouldRespondWith` match
+                    emptyBoardResponse isInfixOf responseBody

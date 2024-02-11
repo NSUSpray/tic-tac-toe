@@ -1,4 +1,4 @@
-module Board (module Board, getElem, toLists, fromLists) where
+module Board (module Board, fromLists, getElem, toLists) where
 
 import Data.Matrix
 

@@ -42,4 +42,10 @@ Execute in your shell
 $ cabal test --test-show-details=direct
 ```
 
-*--test-show-details=direct* means that test case results will be sent in real time; no log file.
+<sup>*--test-show-details=direct* means that test case results will be sent in real time; no log file</sup>
+
+or
+
+```shell
+$ cabal run tic-tac-toe-test
+```
