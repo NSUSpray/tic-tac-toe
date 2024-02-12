@@ -26,7 +26,13 @@ version:            0.1.0.0
 synopsis:           Simple browser-based Tic-tac-toe game using the Scotty library.
 
 -- A longer description of the package.
--- description:
+description:        This is a learning project in which I am writing my first
+    Haskell application. The domain chosen is web development, namely the
+    purely server-side game ‘Tic-tac-toe’. I found Scotty to be the most
+    adequate framework and development is going around it, however, I often
+    have to refer to Wai. I originally didn’t store game state on the server,
+    passing it to the client, but then, for educational purposes, I moved the
+    state entirely to the server, including adding user authentication.
 
 -- URL for the project homepage or repository.
 homepage:           https://github.com/NSUSpray/tic-tac-toe
@@ -54,6 +60,8 @@ extra-doc-files:    README.md
 -- Extra source files to be distributed with the package, such as examples, or a tutorial module.
 extra-source-files: demo.gif
 
+tested-with:        GHC ==9.8.1 || ==9.6.3 || ==9.4.8 || ==9.2.8
+
 common warnings
     ghc-options: -Wall
 
@@ -67,18 +75,18 @@ library
     hs-source-dirs:
         src
     build-depends:
-        base ^>=4.17.2.1,
+        base >=4.16.4 && <5,
         blaze-html ^>=0.9.1.2,
-        containers ^>=0.6.7,
+        containers >=0.6.5.1 && <0.7,
         matrix ^>=0.3.6.3,
         scotty ^>=0.21,
-        stm ^>=2.5.3,
-        text ^>=2.1,
+        stm >=2.5.0.2 && <3,
+        text >=1.2.5 && <3,
         utf8-string ^>=1.0.2,
         wai ^>=3.2.4,
         wai-extra ^>=3.1.14,
         wai-middleware-static ^>=0.9,
-        wai-session
+        wai-session ^>=0.3.3
     default-language: Haskell2010
 
 executable tic-tac-toe
@@ -96,7 +104,7 @@ executable tic-tac-toe
 
     -- Other library packages from which modules are imported.
     build-depends:
-        base ^>=4.17.2.1,
+        base >=4.16.4 && <5,
         tic-tac-toe
 
     -- Directories containing source files.
@@ -113,11 +121,11 @@ test-suite tic-tac-toe-test
         BoardSpec,
         HtmlSpec
     build-depends:
-        base ^>=4.17.2.1,
+        base >=4.16.4 && <5,
         blaze-html ^>=0.9.1.2,
         hspec ^>=2.11.7,
         hspec-wai ^>=0.11.1,
-        text ^>=2.1,
+        text >=1.2.5 && <3,
         tic-tac-toe,
         utf8-string ^>=1.0.2,
         wai-extra ^>=3.1.14
