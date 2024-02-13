@@ -20,7 +20,7 @@ fromCell possibleMove anyWins (pos,cell) = case (anyWins,cell) of
     (True,_) -> text " "
 
 fromBoard :: Move -> Board -> Html
-fromBoard move board = form ! method "post" $ do
+fromBoard move board = form ! method "post" $
     table $ tbody $ forM_ (rowsOf board) $ tr . mapM_ tdFromCell
     where
         tdFromCell = td . fromCell move (anyWinsOn board)

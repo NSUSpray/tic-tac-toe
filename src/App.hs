@@ -9,25 +9,24 @@ import qualified Web.Scotty as S
 
 import Board (Move(X),emptyBoard)
 import Actions
-import qualified Sessions (Var,init)
+import Sessions (SessionsVar,initSessions)
 
 
-routes :: Sessions.Var -> S.ScottyM ()
+routes :: SessionsVar -> S.ScottyM ()
 routes sessionsVar = do
     S.middleware $ staticPolicy (noDots >-> addBase "static")
     S.get "/" $ requestMove sessionsVar
     S.post "/" $ processMove sessionsVar
     S.get "/restart" $ restart sessionsVar
 
-app :: IO (Sessions.Var,Application)
+app :: IO (SessionsVar,Application)
 app = do
-    sessionsVar <- Sessions.init
+    sessionsVar <- initSessions
     application <- S.scottyApp $ routes sessionsVar
     return (sessionsVar,application)
 
 run :: IO ()
 run = do
-    sessionsVar <- Sessions.init
-    let port = 3000 in S.scotty port $ do
-        S.middleware logStdoutDev
-        routes sessionsVar
+    sessionsVar <- initSessions
+    let port = 3000 in S.scotty port $
+        S.middleware logStdoutDev >> routes sessionsVar

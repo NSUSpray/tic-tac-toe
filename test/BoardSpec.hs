@@ -1,4 +1,4 @@
-module BoardSpec where
+module BoardSpec (spec) where
 
 import Control.Exception (evaluate)
 import Text.Read (readMaybe)

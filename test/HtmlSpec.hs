@@ -1,4 +1,4 @@
-module HtmlSpec where
+module HtmlSpec (spec) where
 
 import Data.Text.Lazy (unpack)
 import Test.Hspec

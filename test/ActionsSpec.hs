@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ActionsSpec where
+module ActionsSpec (spec) where
 
 import Data.List
 
@@ -12,7 +12,7 @@ import Network.Wai.Test (simpleHeaders)
 
 import App (app)
 import Board
-import qualified Sessions (Var,cookieName,writeBoard)
+import Sessions
 
 
 emptyBoardResponse, nonEmptyBoardResponse :: String
@@ -63,7 +63,7 @@ preFullBoard = fromLists [
     ]
 
 
-match :: String -> (String -> String -> Bool) -> b -> ResponseMatcher
+match :: String -> (String -> String -> Bool) -> a -> ResponseMatcher
 match s p _ = ResponseMatcher 200 [] $ MatchBody $ \_ body ->
     let bodyStr = LazyBytes.toString body in
     if s `p` bodyStr then Nothing
@@ -74,14 +74,14 @@ responseBody :: a
 responseBody = error
     "It's a dummy for the last argument of 'match' function, not for evaluate."
 
-updateSessionWith :: Board -> WaiSession Sessions.Var ()
+updateSessionWith :: Board -> WaiSession SessionsVar SessionId
 updateSessionWith board = do
     sessionsVar <- getState
     response <- get "/"
     let (Just cookies) = lookup "Set-Cookie" $ simpleHeaders response
-        (Just sessionId) = stripPrefix (Sessions.cookieName ++ "=") $
+        (Just sessionId) = stripPrefix (sessionsCookieName ++ "=") $
             Bytes.toString cookies
-    liftIO $ Sessions.writeBoard sessionsVar sessionId board
+    liftIO $ board `writeAtIdTo` sessionsVar $ sessionId
 
 
 spec :: Spec

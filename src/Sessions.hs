@@ -2,35 +2,46 @@ module Sessions where
 
 import Control.Concurrent.STM.TVar
 import Control.Monad.STM (atomically)
-import Data.ByteString.UTF8 (toString)
+import Data.ByteString.UTF8 (fromString,toString)
 import qualified Data.Map as Map
 import Network.Wai.Session (genSessionId)
+import Web.Scotty.Cookie
 
-import Board
-
-
-type Id = String
-type Sessions = Map.Map Id Board
-type Var = TVar Sessions
+import Board (Board,emptyBoard)
 
 
-cookieName :: String
-cookieName = "session_id"
+type SessionId = String
+type Sessions = Map.Map SessionId Board
+type SessionsVar = TVar Sessions
 
-init :: IO Var
-init = newTVarIO emptySessions
+
+sessionsCookieName :: String
+sessionsCookieName = "session_id"
+
+cookie :: String -> SetCookie
+cookie value =  defaultSetCookie {
+    setCookieName = fromString sessionsCookieName,
+    setCookieValue = fromString value
+    }
+
+lookupBoard :: SessionId -> Sessions -> Maybe Board
+lookupBoard = Map.lookup
+
+isKeyOf :: SessionId -> Sessions -> Bool
+isKeyOf = Map.member
+
+initSessions :: IO SessionsVar
+initSessions = newTVarIO emptySessions
     where emptySessions = Map.empty
 
-read :: Var -> IO Sessions
-read = readTVarIO
+readSessions :: SessionsVar -> IO Sessions
+readSessions = readTVarIO
 
-createNew :: Var -> IO Id
-createNew sessionsVar = do
-    newSessionIdBStr <- genSessionId
-    let newSessionId = toString newSessionIdBStr
-    writeBoard sessionsVar newSessionId emptyBoard
-    return newSessionId
+writeAtIdTo :: Board -> SessionsVar -> SessionId -> IO SessionId
+(board `writeAtIdTo` sessionsVar) sessionId = do
+    atomically $ modifyTVar sessionsVar $ Map.insert sessionId board
+    return sessionId
 
-writeBoard :: Var -> Id -> Board -> IO ()
-writeBoard sessionsVar sessionId =
-    atomically . modifyTVar sessionsVar . Map.insert sessionId
+createNewSession :: SessionsVar -> IO SessionId
+createNewSession sessionsVar =
+    genSessionId >>= (emptyBoard `writeAtIdTo` sessionsVar) . toString
